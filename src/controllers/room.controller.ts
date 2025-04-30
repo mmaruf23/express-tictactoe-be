@@ -1,0 +1,89 @@
+import { Request, Response } from 'express';
+import { Clients, Room, Rooms } from '../services';
+import { randomUUID } from 'crypto';
+import { HttpStatus } from '../constants';
+import { createRoomBody, joinRoomBody } from '../types/room.types';
+
+export const create = (req: Request<{}, {}, createRoomBody>, res: Response) => {
+  const newKey = randomUUID();
+  const { client, clientData } = req.body;
+
+  const createdRoom: Room = {
+    host: client,
+    players: [client],
+    data: {
+      board: new Array(6).fill(null),
+    },
+  };
+  Rooms.set(newKey, createdRoom);
+  clientData.socket.join(newKey);
+  clientData.roomId = newKey;
+
+  res.status(HttpStatus.CREATED).json({
+    message: 'Room created successfully',
+  });
+};
+
+export const join = (req: Request<{}, {}, joinRoomBody>, res: Response) => {
+  const { client, roomId, clientData, roomData } = req.body;
+
+  if (roomData.players.length >= 2) {
+    res.status(HttpStatus.BAD_REQUEST).json({
+      message: 'Room is full',
+    });
+    return;
+  }
+
+  // join room
+  clientData.socket.join(roomId);
+  clientData.roomId = roomId;
+  roomData.players.push(client);
+  roomData.data.currentTurn = client;
+
+  res.status(HttpStatus.OK).json({
+    message: 'Success join room',
+  });
+};
+
+export const leave = (req: Request<{}, {}, joinRoomBody>, res: Response) => {
+  const { client, roomId, clientData, roomData } = req.body;
+
+  if (clientData.roomId !== roomId) {
+    res.status(HttpStatus.FORBIDDEN).json({
+      message: 'client memang tidak ada di room ini!, ada ada aja. hmph.',
+    });
+  }
+  clientData.socket.leave(roomId);
+  clientData.roomId = undefined;
+  const index = roomData.players.indexOf(client);
+  roomData.players.splice(index, 1);
+
+  res.status(HttpStatus.OK).json({
+    message: 'Success leave room',
+  });
+};
+
+export const erase = (req: Request<{}, {}, joinRoomBody>, res: Response) => {
+  const { client, roomId, roomData } = req.body;
+
+  if (roomData.host !== client) {
+    res.status(HttpStatus.FORBIDDEN).json({
+      message: 'Cannot delete this room',
+    });
+  }
+
+  // leave room
+  Rooms.get(roomId)?.players.forEach((player) => {
+    const playerData = Clients.get(player);
+    if (playerData) {
+      playerData.socket.leave(roomId);
+      playerData.roomId = undefined;
+    }
+  });
+
+  Rooms.delete(roomId);
+
+  res.status(HttpStatus.OK).json({
+    message: 'Succesfully deleted',
+  });
+};
