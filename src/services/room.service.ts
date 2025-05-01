@@ -2,7 +2,7 @@ export interface Room {
   host: string;
   players: string[];
   data: {
-    board: (number | null)[];
+    board: string[]; // next ganti jadi enum, maghriban dulu
     currentTurn?: string;
   };
 }

@@ -1,12 +1,12 @@
 import { Server } from 'socket.io';
 import { Server as HttpServer } from 'http';
-import { registerClientHandler } from './controllers/client.controller';
+import { ClientController } from './controllers';
 
 export function setUpSocket(server: HttpServer) {
   const io = new Server(server);
 
   io.on('connection', (socket) => {
     console.log(`Socket connected: ${socket.id}`);
-    registerClientHandler(socket);
+    const clientId = ClientController.registerClientHandler(socket);
   });
 }

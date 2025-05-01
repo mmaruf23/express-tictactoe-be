@@ -1,6 +1,6 @@
 import { Clients } from '../services';
 import { randomUUID } from 'crypto';
-import { CustomSocket } from '../types/room.types';
+import { CustomSocket } from '../types/client.types';
 
 /**
  * Untuk handling socket client. ah pusing saya
@@ -32,4 +32,6 @@ export const registerClientHandler = (socket: CustomSocket) => {
       }
     }
   });
+
+  return clientId;
 };
