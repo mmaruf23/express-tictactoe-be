@@ -2,7 +2,11 @@ import { TileValue } from '../constants/tile-value';
 import { Clients, Rooms } from '../services';
 import { CustomSocket } from '../types/client.types';
 
-export const registerGameHandler = (socket: CustomSocket, clientId: string) => {
+export const registerGameHandler = (
+  socket: CustomSocket,
+  clientId: string,
+  roomBroadcast: <T>(roomId: string, event: string, data: T) => void
+) => {
   const client = Clients.get(clientId);
 
   // meskipun nggak mungkin sih client undefined
@@ -39,7 +43,7 @@ export const registerGameHandler = (socket: CustomSocket, clientId: string) => {
     room.data.board[tile] = clientId == room.host ? TileValue.X : TileValue.O; // pake enum
     room.data.currentTurn = room.players.find((value) => value != clientId);
 
-    socket.emit('success', {
+    roomBroadcast(client.roomId, 'update-board', {
       newBoard: room.data.board,
     });
 
