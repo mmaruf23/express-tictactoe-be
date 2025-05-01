@@ -1,3 +1,4 @@
+import { TileValue } from '../constants/tile-value';
 import { Clients, Rooms } from '../services';
 import { CustomSocket } from '../types/client.types';
 
@@ -35,6 +36,13 @@ export const registerGameHandler = (socket: CustomSocket, clientId: string) => {
       return;
     }
 
-    room.data.board[tile] = clientId == room.host ? 'O' : 'X'; // pake enum
+    room.data.board[tile] = clientId == room.host ? TileValue.X : TileValue.O; // pake enum
+    room.data.currentTurn = room.players.find((value) => value != clientId);
+
+    socket.emit('success', {
+      newBoard: room.data.board,
+    });
+
+    // cek ada yang win nanti disini!
   });
 };

@@ -1,8 +1,10 @@
+import { TileValue } from '../constants/tile-value';
+
 export interface Room {
   host: string;
   players: string[];
   data: {
-    board: string[]; // next ganti jadi enum, maghriban dulu
+    board: TileValue[];
     currentTurn?: string;
   };
 }
