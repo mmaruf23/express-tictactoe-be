@@ -1,32 +1,35 @@
-import { Socket } from 'socket.io';
-import { Clients, Rooms } from '../services';
+import { Clients } from '../services';
 import { randomUUID } from 'crypto';
+import { CustomSocket } from '../types/room.types';
 
-export const registerClientHandler = (socket: Socket) => {
-  socket.on('auth', (clientId?: string) => {
-    // cek parameter clientId jika tidak ada generate dengan randomUUID();
-    if (!clientId) {
-      const newKey = randomUUID();
-      Clients.set(newKey, {
-        socket: [socket],
-      });
-      return;
-    }
-
-    // cek client apakah ada di memory jika tidak ada buatkan saja.
-    let client = Clients.get(clientId);
-    if (!client) {
+/**
+ * Untuk handling socket client. ah pusing saya
+ * @param socket - CustomSocket extends Socket: socket.io
+ */
+export const registerClientHandler = (socket: CustomSocket) => {
+  let clientId = socket.handshake.auth.clientId;
+  if (clientId) {
+    if (!Clients.has(clientId)) {
       Clients.set(clientId, {
-        socket: [socket],
+        socket: new Set(),
       });
-      return;
     }
+  } else {
+    clientId = randomUUID();
+    Clients.set(clientId, {
+      socket: new Set(),
+    });
+  }
 
-    // jika ada tambahkan socket
-    client.socket.push(socket);
-  });
+  Clients.get(clientId)?.socket.add(socket);
 
   socket.on('disconnect', () => {
-    // lanjut disini oke
+    const client = Clients.get(clientId);
+    if (client) {
+      client.socket.delete(socket);
+      if (client.socket.size === 0) {
+        Clients.delete(clientId);
+      }
+    }
   });
 };

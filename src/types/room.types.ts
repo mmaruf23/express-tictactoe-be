@@ -1,3 +1,4 @@
+import { Socket } from 'socket.io';
 import { Client, Room } from '../services';
 
 export interface createRoomBody {
@@ -10,4 +11,12 @@ export interface joinRoomBody {
   roomId: string;
   clientData: Client;
   roomData: Room;
+}
+
+export interface CustomSocket extends Socket {
+  handshake: Socket['handshake'] & {
+    auth: {
+      clientId?: string;
+    };
+  };
 }

@@ -16,7 +16,9 @@ export const create = (req: Request<{}, {}, createRoomBody>, res: Response) => {
     },
   };
   Rooms.set(newKey, createdRoom);
-  clientData.socket.join(newKey);
+  clientData.socket.forEach((socket) => {
+    socket.join(newKey);
+  });
   clientData.roomId = newKey;
 
   res.status(HttpStatus.CREATED).json({
@@ -35,7 +37,9 @@ export const join = (req: Request<{}, {}, joinRoomBody>, res: Response) => {
   }
 
   // join room
-  clientData.socket.join(roomId);
+  clientData.socket.forEach((socket) => {
+    socket.join(roomId);
+  });
   clientData.roomId = roomId;
   roomData.players.push(client);
   roomData.data.currentTurn = client;
