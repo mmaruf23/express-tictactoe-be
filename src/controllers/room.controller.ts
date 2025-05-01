@@ -45,6 +45,11 @@ export const join = (req: Request<{}, {}, joinRoomBody>, res: Response) => {
   });
 };
 
+/**
+ * Method untuk leave room yang ada di memory dan juga socket. (semua socket akan leave)
+ * @param req - Express Request with body: joinRoomBody
+ * @param res - Express Response
+ */
 export const leave = (req: Request<{}, {}, joinRoomBody>, res: Response) => {
   const { client, roomId, clientData, roomData } = req.body;
 
@@ -53,7 +58,9 @@ export const leave = (req: Request<{}, {}, joinRoomBody>, res: Response) => {
       message: 'client memang tidak ada di room ini!, ada ada aja. hmph.',
     });
   }
-  clientData.socket.leave(roomId);
+  clientData.socket.forEach((socket) => {
+    socket.leave(roomId);
+  });
   clientData.roomId = undefined;
   const index = roomData.players.indexOf(client);
   roomData.players.splice(index, 1);
@@ -63,6 +70,11 @@ export const leave = (req: Request<{}, {}, joinRoomBody>, res: Response) => {
   });
 };
 
+/**
+ * Method untuk hapus room dan akan leave room yang ada di memory dan juga socket. (semua socket akan leave)
+ * @param req - Express Request with body: joinRoomBody
+ * @param res - Express Response
+ */
 export const erase = (req: Request<{}, {}, joinRoomBody>, res: Response) => {
   const { client, roomId, roomData } = req.body;
 
@@ -72,11 +84,12 @@ export const erase = (req: Request<{}, {}, joinRoomBody>, res: Response) => {
     });
   }
 
-  // leave room
   Rooms.get(roomId)?.players.forEach((player) => {
     const playerData = Clients.get(player);
     if (playerData) {
-      playerData.socket.leave(roomId);
+      playerData.socket.forEach((socket) => {
+        socket.leave(roomId);
+      });
       playerData.roomId = undefined;
     }
   });
