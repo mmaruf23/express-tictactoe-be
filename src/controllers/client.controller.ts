@@ -1,4 +1,4 @@
-import { Clients } from '../services';
+import { Clients, Rooms } from '../services';
 import { randomUUID } from 'crypto';
 import { CustomSocket } from '../types/client.types';
 
@@ -7,7 +7,8 @@ import { CustomSocket } from '../types/client.types';
  * @param socket - CustomSocket extends Socket: socket.io
  */
 export const registerClientHandler = (socket: CustomSocket) => {
-  let clientId = socket.handshake.auth.clientId;
+  console.log('auth: ', socket.handshake.auth);
+  let { clientId, username } = socket.handshake.auth;
   if (clientId) {
     if (!Clients.has(clientId)) {
       Clients.set(clientId, {
@@ -21,17 +22,34 @@ export const registerClientHandler = (socket: CustomSocket) => {
     });
   }
 
-  Clients.get(clientId)?.socket.add(socket);
+  const client = Clients.get(clientId);
+  if (client) {
+    client.socket.add(socket);
+    client.username = username;
+  }
+
+  socket.emit('init', {
+    username: username,
+    clientId: clientId,
+  });
+
+  const rooms = Array.from(Rooms.values()).map(({ host, players }) => ({
+    host,
+    players,
+  }));
+
+  socket.emit('update-room', rooms);
 
   socket.on('disconnect', () => {
-    const client = Clients.get(clientId);
     if (client) {
       client.socket.delete(socket);
       if (client.socket.size === 0) {
         Clients.delete(clientId);
       }
     }
+    console.log(Clients);
   });
 
+  console.log(Clients);
   return clientId;
 };

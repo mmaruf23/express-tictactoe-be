@@ -3,10 +3,12 @@ import { Clients, Room, Rooms } from '../services';
 import { randomUUID } from 'crypto';
 import { HttpStatus } from '../constants';
 import { createRoomBody, joinRoomBody } from '../types/room.types';
+import { getIO } from '../socket';
 
 export const create = (req: Request<{}, {}, createRoomBody>, res: Response) => {
   const newKey = randomUUID();
   const { client, clientData } = req.body;
+  const io = getIO();
 
   const createdRoom: Room = {
     host: client,
@@ -24,6 +26,12 @@ export const create = (req: Request<{}, {}, createRoomBody>, res: Response) => {
   res.status(HttpStatus.CREATED).json({
     message: 'Room created successfully',
   });
+
+  const rooms = Array.from(Rooms.values()).map(({ host, players }) => ({
+    host,
+    players,
+  }));
+  io.emit('update-room', rooms);
 };
 
 export const join = (req: Request<{}, {}, joinRoomBody>, res: Response) => {

@@ -4,6 +4,7 @@ export interface CustomSocket extends Socket {
   handshake: Socket['handshake'] & {
     auth: {
       clientId?: string;
+      username?: string;
     };
   };
 }
