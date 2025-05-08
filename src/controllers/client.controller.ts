@@ -6,8 +6,7 @@ import { CustomSocket } from '../types/client.types';
  * Untuk handling socket client. ah pusing saya
  * @param socket - CustomSocket extends Socket: socket.io
  */
-export const registerClientHandler = (socket: CustomSocket) => {
-  console.log('auth: ', socket.handshake.auth);
+export const registerClientHandler = (socket: CustomSocket): string => {
   let { clientId, username } = socket.handshake.auth;
   if (clientId) {
     if (!Clients.has(clientId)) {
@@ -23,10 +22,13 @@ export const registerClientHandler = (socket: CustomSocket) => {
   }
 
   const client = Clients.get(clientId);
-  if (client) {
-    client.socket.add(socket);
-    client.username = username;
+  if (!client) {
+    // Jika client tidak ditemukan, lempar error
+    throw new Error(`Ada masalah anjai!, javascript ng'bug`);
   }
+
+  client.socket.add(socket);
+  client.username = username;
 
   socket.emit('init', {
     username: username,
@@ -41,13 +43,21 @@ export const registerClientHandler = (socket: CustomSocket) => {
   socket.emit('update-room', rooms);
 
   socket.on('disconnect', () => {
-    if (client) {
-      client.socket.delete(socket);
-      if (client.socket.size === 0) {
-        Clients.delete(clientId);
-      }
+    client.socket.delete(socket);
+    if (client.socket.size === 0) {
+      Clients.delete(clientId);
     }
     console.log(Clients);
+  });
+
+  socket.on('update-name', (name: string) => {
+    client.username = name;
+    client.socket.forEach((each) => {
+      each.emit('update-name-response', name);
+      console.log('emit terkirim ke ', each.id);
+    });
+
+    console.log('nama baru', name);
   });
 
   console.log(Clients);
