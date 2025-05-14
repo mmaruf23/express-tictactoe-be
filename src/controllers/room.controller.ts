@@ -5,12 +5,22 @@ import { HttpStatus } from '../constants';
 import { createRoomBody, joinRoomBody } from '../types/room.types';
 import { getIO } from '../socket';
 
+const broadcastRoom = () => {
+  const rooms = Array.from(Rooms.values()).map(({ roomId, host, players }) => ({
+    roomId,
+    host,
+    players,
+  }));
+  const io = getIO();
+  io.emit('update-room', rooms);
+};
+
 export const create = (req: Request<{}, {}, createRoomBody>, res: Response) => {
   const newKey = randomUUID();
   const { client, clientData } = req.body;
-  const io = getIO();
 
   const createdRoom: Room = {
+    roomId: newKey,
     host: client,
     players: [client],
     data: {
@@ -27,11 +37,7 @@ export const create = (req: Request<{}, {}, createRoomBody>, res: Response) => {
     message: 'Room created successfully',
   });
 
-  const rooms = Array.from(Rooms.values()).map(({ host, players }) => ({
-    host,
-    players,
-  }));
-  io.emit('update-room', rooms);
+  broadcastRoom();
 };
 
 export const join = (req: Request<{}, {}, joinRoomBody>, res: Response) => {
@@ -55,6 +61,8 @@ export const join = (req: Request<{}, {}, joinRoomBody>, res: Response) => {
   res.status(HttpStatus.OK).json({
     message: 'Success join room',
   });
+
+  broadcastRoom();
 };
 
 /**
@@ -80,6 +88,8 @@ export const leave = (req: Request<{}, {}, joinRoomBody>, res: Response) => {
   res.status(HttpStatus.OK).json({
     message: 'Success leave room',
   });
+
+  broadcastRoom();
 };
 
 /**
@@ -111,4 +121,6 @@ export const erase = (req: Request<{}, {}, joinRoomBody>, res: Response) => {
   res.status(HttpStatus.OK).json({
     message: 'Succesfully deleted',
   });
+
+  broadcastRoom();
 };

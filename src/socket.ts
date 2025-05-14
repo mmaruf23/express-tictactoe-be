@@ -25,8 +25,16 @@ export function setUpSocket(server: HttpServer) {
   io.on('connection', (socket) => {
     console.log(`Socket connected: ${socket.id}`);
 
-    socket.emit('');
-    socket.on('init', (userData: { clientId: string; username: string }) => {
+    const defaultUserData: { clientId: undefined; username: undefined } = {
+      username: undefined,
+      clientId: undefined,
+    };
+
+    socket.once('init', (rawData: string | null) => {
+      const userData: { clientId: string; username: string } = rawData
+        ? JSON.parse(rawData)
+        : defaultUserData;
+
       const clientId = ClientController.registerClientHandler(socket, userData);
       GameController.registerGameHandler(socket, clientId);
     });

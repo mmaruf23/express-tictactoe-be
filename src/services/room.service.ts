@@ -1,6 +1,7 @@
 import { TileValue } from '../constants/tile-value';
 
 export interface Room {
+  roomId: string;
   host: string;
   players: string[];
   data: {

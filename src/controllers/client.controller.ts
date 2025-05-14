@@ -1,10 +1,10 @@
 import { Clients, Rooms } from '../services';
-import { randomUUID } from 'crypto';
+import { randomInt, randomUUID } from 'crypto';
 import { Socket } from 'socket.io';
 
 type UserData = {
-  clientId: string;
-  username: string;
+  clientId: string | undefined;
+  username: string | undefined;
 };
 
 /**
@@ -36,15 +36,22 @@ export const registerClientHandler = (
     throw new Error(`Ada masalah anjai!, javascript ng'bug`);
   }
 
+  if (!username) {
+    username = `Guest${randomInt(100, 999)}`;
+  }
+
   client.socket.add(socket);
   client.username = username;
 
-  socket.emit('init-response', {
+  const dataResponse: UserData = {
     username: username,
     clientId: clientId,
-  });
+  };
 
-  const rooms = Array.from(Rooms.values()).map(({ host, players }) => ({
+  socket.emit('init-response', dataResponse);
+
+  const rooms = Array.from(Rooms.values()).map(({ host, players, roomId }) => ({
+    roomId,
     host,
     players,
   }));
@@ -60,13 +67,12 @@ export const registerClientHandler = (
   });
 
   socket.on('update-name', (name: string) => {
+    dataResponse.username = name;
     client.username = name;
     client.socket.forEach((each) => {
-      each.emit('update-name-response', name);
+      each.emit('init-response', dataResponse);
       console.log('emit terkirim ke ', each.id);
     });
-
-    console.log('nama baru', name);
   });
 
   console.log(Clients);

@@ -2,7 +2,6 @@ import { Socket } from 'socket.io';
 import { TileValue } from '../constants/tile-value';
 import { Clients, Rooms } from '../services';
 import { getIO } from '../socket';
-import { CustomSocket } from '../types/client.types';
 
 /**
  * Registers the game event handlers for a specific client socket.
