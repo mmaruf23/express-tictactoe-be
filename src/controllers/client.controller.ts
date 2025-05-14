@@ -73,6 +73,8 @@ export const registerClientHandler = (
       each.emit('init-response', dataResponse);
       console.log('emit terkirim ke ', each.id);
     });
+
+    console.log(Clients);
   });
 
   console.log(Clients);
