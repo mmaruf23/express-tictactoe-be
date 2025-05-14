@@ -1,13 +1,22 @@
 import { Clients, Rooms } from '../services';
 import { randomUUID } from 'crypto';
-import { CustomSocket } from '../types/client.types';
+import { Socket } from 'socket.io';
+
+type UserData = {
+  clientId: string;
+  username: string;
+};
 
 /**
  * Untuk handling socket client. ah pusing saya
  * @param socket - CustomSocket extends Socket: socket.io
  */
-export const registerClientHandler = (socket: CustomSocket): string => {
-  let { clientId, username } = socket.handshake.auth;
+export const registerClientHandler = (
+  socket: Socket,
+  userData: UserData
+): string => {
+  let { clientId, username } = userData;
+
   if (clientId) {
     if (!Clients.has(clientId)) {
       Clients.set(clientId, {
@@ -30,7 +39,7 @@ export const registerClientHandler = (socket: CustomSocket): string => {
   client.socket.add(socket);
   client.username = username;
 
-  socket.emit('init', {
+  socket.emit('init-response', {
     username: username,
     clientId: clientId,
   });

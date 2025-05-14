@@ -25,8 +25,11 @@ export function setUpSocket(server: HttpServer) {
   io.on('connection', (socket) => {
     console.log(`Socket connected: ${socket.id}`);
 
-    const clientId = ClientController.registerClientHandler(socket);
-    GameController.registerGameHandler(socket, clientId);
+    socket.emit('');
+    socket.on('init', (userData: { clientId: string; username: string }) => {
+      const clientId = ClientController.registerClientHandler(socket, userData);
+      GameController.registerGameHandler(socket, clientId);
+    });
   });
 }
 /**
